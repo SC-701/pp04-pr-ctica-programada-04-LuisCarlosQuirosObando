@@ -21,9 +21,8 @@ body {
   margin-bottom: 60px;
 }
 
-.form-control
+.autenticacion
 {
-    display:block;
-    width:100%;
-    padding: 0.5rem 05rem;
+    color:#fff;
+    padding-left:10vw;
 }

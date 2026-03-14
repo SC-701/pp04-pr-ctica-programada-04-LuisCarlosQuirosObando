@@ -1,4 +1,4 @@
-﻿using Abstracciones.Reglas;
+﻿using Abstracciones.Interfaces.Reglas;
 using Abstracciones.Modelos.Servicios;
 using Microsoft.Extensions.Configuration;
 

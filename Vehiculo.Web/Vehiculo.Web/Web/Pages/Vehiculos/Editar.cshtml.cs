@@ -1,5 +1,6 @@
+using Abstracciones.Interfaces.Reglas;
 using Abstracciones.Modelos;
-using Abstracciones.Reglas;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Web.Pages.Vehiculos
 {
+    [Authorize]
     public class EditarModel : PageModel
     {
         private readonly IConfiguracion _configuracion;
@@ -33,7 +35,7 @@ namespace Web.Pages.Vehiculos
             if (id == Guid.Empty)
                 return NotFound();
             string endpoint = _configuracion.ObtenerMetodo("ApiEndPoints", "ObtenerVehiculo");
-            var cliente = new HttpClient();
+            var cliente = ObtenerClienteConToken();
             var solicitud = new HttpRequestMessage(HttpMethod.Get, string.Format(endpoint, id));
 
             var respuesta = await cliente.SendAsync(solicitud);
@@ -66,7 +68,7 @@ namespace Web.Pages.Vehiculos
             if (!ModelState.IsValid)
                 return Page();
             string endpoint = _configuracion.ObtenerMetodo("ApiEndPoints", "EditarVehiculo");
-            var cliente = new HttpClient();
+            var cliente = ObtenerClienteConToken();
             var respuesta = await cliente.PutAsJsonAsync<VehiculoRequest>(string.Format(endpoint,vehiculoResponse.Id), new VehiculoRequest
             {
                 Placa = vehiculoResponse.Placa,
@@ -85,7 +87,7 @@ namespace Web.Pages.Vehiculos
         private async Task ObtenerMarcas()
         {
             string endpoint = _configuracion.ObtenerMetodo("ApiEndPoints", "ObtenerMarcas");
-            var cliente = new HttpClient();
+            var cliente = ObtenerClienteConToken();
             var solicitud = new HttpRequestMessage(HttpMethod.Get, endpoint);
 
             var respuesta = await cliente.SendAsync(solicitud);
@@ -104,7 +106,7 @@ namespace Web.Pages.Vehiculos
         private async Task<List<Modelo>> ObtenerModelos(Guid marcaId)
         {
             string endpoint = _configuracion.ObtenerMetodo("ApiEndPoints", "ObtenerModelos");
-            var cliente = new HttpClient();
+            var cliente = ObtenerClienteConToken();
             var solicitud = new HttpRequestMessage(HttpMethod.Get, string.Format(endpoint,marcaId));
 
             var respuesta = await cliente.SendAsync(solicitud);
@@ -123,6 +125,18 @@ namespace Web.Pages.Vehiculos
         {
             var modelos = await ObtenerModelos(marcaID);
             return new JsonResult(modelos);
+        }
+
+        private HttpClient ObtenerClienteConToken()
+        {
+            var tokenClaim = HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == "Token");
+            var cliente = new HttpClient();
+            if (tokenClaim != null)
+                cliente.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer", tokenClaim.Value);
+            return cliente;
         }
 
     }
